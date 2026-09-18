@@ -45,9 +45,9 @@
   .tag.cat-VC-Deals { background: #fdeade; color: #9a4b12; }
   .tag.cat-VC { background: #f3e8fb; color: #6b2f9e; }
   .tag.cat-AI { background: #e3f0fd; color: #175a9e; }
-  .tag.cat-Startup { background: #fdf1de; color: #93641a; }
-  .tag.cat-Scale-up { background: #e1f5ea; color: #157a4a; }
+  .tag.cat-Startup-Scale-up { background: #fdf1de; color: #93641a; }
   .tag.cat-Tech { background: #ececec; color: #4a4a4a; }
+  .tag.cat-Hiring { background: #dff3ee; color: #0f7a63; }
   .note-box { display: none; margin-top: 9px; }
   .note-box.open { display: block; }
   .note-box textarea { width: 100%; min-height: 54px; font-size: 13px; font-family: inherit; border: 1px solid #e3dfd3; border-radius: 8px; padding: 8px 10px; resize: vertical; background: #fffdf7; color: #4a463f; }
@@ -57,6 +57,13 @@
   .more-btn { display:block; margin: 10px auto 0; background:none; border:1px solid #d8d4cb; border-radius: 999px; padding: 7px 18px; font-size: 13px; color:#4a463f; cursor:pointer; }
   .more-btn:hover { border-color:#b8b19f; }
   .footer-note { margin-top: 30px; font-size: 11.5px; color: #b8b19f; text-align:center; }
+  .hire-intro { font-size: 12.5px; color: #6b675f; line-height: 1.5; margin-bottom: 16px; background: #eef0ec; border-radius: 8px; padding: 10px 12px; }
+  .hire-card { background: #fff; border: 1px solid #eae7e0; border-radius: 10px; padding: 13px 15px; margin-bottom: 8px; }
+  .hire-role { font-size: 15px; font-weight: 700; color: #0f7a63; }
+  .hire-note { font-size: 13px; color: #6b675f; line-height: 1.4; margin-top: 3px; }
+  .hire-links { margin-top: 9px; display: flex; gap: 8px; }
+  .hire-link { font-size: 12.5px; font-weight: 600; color: #175a9e; text-decoration: none; border: 1px solid #d8e4f0; background: #eef4fb; border-radius: 999px; padding: 5px 12px; }
+  .hire-link:hover { background: #dfeaf7; }
   .learn-card { background: linear-gradient(135deg, #fbf3e3, #f6ecd8); border: 1px solid #e9dcb8; border-radius: 12px; padding: 16px 18px; margin-bottom: 22px; position: relative; }
   .learn-kicker { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; font-weight: 800; color: #9a7d2e; margin-bottom: 6px; display:flex; align-items:center; gap:6px; }
   .learn-term { font-size: 17px; font-weight: 800; color: #3d2f0f; margin-bottom: 2px; }
@@ -82,11 +89,11 @@
     <div class="meta-row">
       <div>
         <h1 class="pagetitle" id="viewTitle">All</h1>
-        <div class="status" id="status">Generated 2026-09-13 13:36 UTC</div>
+        <div class="status" id="status">Generated 2026-09-17 14:10 UTC</div>
       </div>
     </div>
     <div id="content"></div>
-    <div class="footer-note">Sources: Sifted &middot; Tech.eu &middot; EU-Startups &middot; UKTN &middot; TechCrunch &middot; Crunchbase News. Refreshed once daily. Saved items and notes are stored locally and persist across daily refreshes.</div>
+    <div class="footer-note">News sources: Sifted &middot; Tech.eu &middot; EU-Startups &middot; UKTN &middot; TechCrunch &middot; Crunchbase News. Refreshed once daily. Saved items and notes are stored locally and persist across daily refreshes.</div>
   </div>
 </div>
 <script src="data.js"></script>
@@ -101,9 +108,10 @@
     { key: "VC Deals", label: "VC Deals" },
     { key: "VC", label: "VC (Funds)" },
     { key: "AI", label: "AI" },
-    { key: "Startup", label: "Startup" },
-    { key: "Scale-up", label: "Scale-up" },
+    { key: "Startup & Scale-up", label: "Startup & Scale-up" },
     { key: "Tech", label: "Tech" },
+    { key: "sep2", label: "" },
+    { key: "Hiring", label: "💼 Hiring" },
   ];
   let activeKey = "All";
   let euShown = 40, usShown = 20;
@@ -114,12 +122,25 @@
   let savedItems = loadJSON(LS_SAVED);
   let notes = loadJSON(LS_NOTES);
   function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; }
-  function countFor(key) { if (key === "All") return ITEMS.length; if (key === "Saved") return Object.keys(savedItems).length; return ITEMS.filter(i => i.cat === key).length; }
+  const HIRING_ROLES = [
+    { role: "Founder Associate", note: "Generalist ops/strategy support role reporting directly to a founder or CEO.", linkedin: "https://www.linkedin.com/jobs/search/?keywords=%22Founder%20Associate%22", wellfound: "https://wellfound.com/jobs?query=Founder%20Associate" },
+    { role: "Chief of Staff", note: "Cross-functional right-hand role at a startup or scale-up leadership team.", linkedin: "https://www.linkedin.com/jobs/search/?keywords=%22Chief%20of%20Staff%22", wellfound: "https://wellfound.com/jobs?query=Chief%20of%20Staff" },
+    { role: "Strategy & Operations", note: "Internal strategy, ops, and special-projects roles at growing companies.", linkedin: "https://www.linkedin.com/jobs/search/?keywords=%22Strategy%20and%20Operations%22", wellfound: "https://wellfound.com/jobs?query=Strategy%20Operations" },
+    { role: "GTM / Go-to-Market", note: "Go-to-market strategy, launch, and growth roles.", linkedin: "https://www.linkedin.com/jobs/search/?keywords=%22Go-to-Market%22", wellfound: "https://wellfound.com/jobs?query=Go-to-Market" },
+    { role: "Investment Analyst / Associate", note: "Investing roles at VC firms — analyst and associate level.", linkedin: "https://www.linkedin.com/jobs/search/?keywords=%22Investment%20Associate%22%20OR%20%22Investment%20Analyst%22", wellfound: "https://wellfound.com/jobs?query=Investment%20Associate" },
+  ];
+  function newsItems() { return ITEMS.filter(i => i.cat !== "Hiring"); }
+  function countFor(key) {
+    if (key === "All") return newsItems().length;
+    if (key === "Saved") return Object.keys(savedItems).length;
+    if (key === "Hiring") return HIRING_ROLES.length;
+    return ITEMS.filter(i => i.cat === key).length;
+  }
   function buildNav() {
     const nav = document.getElementById("nav");
     nav.innerHTML = "";
     NAV.forEach(n => {
-      if (n.key === "sep") { nav.appendChild(el("div", "nav-sep")); return; }
+      if (n.key === "sep" || n.key === "sep2") { nav.appendChild(el("div", "nav-sep")); return; }
       const item = el("div", "navitem" + (n.key === activeKey ? " active" : ""));
       item.appendChild(el("span", "", n.label));
       item.appendChild(el("span", "n", String(countFor(n.key))));
@@ -129,6 +150,7 @@
   }
   function timeAgo(date) { const diffMs = Date.now() - date.getTime(); const mins = Math.round(diffMs / 60000); if (mins < 1) return "just now"; if (mins < 60) return mins + "m ago"; const hrs = Math.round(mins / 60); if (hrs < 24) return hrs + "h ago"; const days = Math.round(hrs / 24); return days + "d ago"; }
   function itemSnapshot(item) { return { title: item.title, link: item.link, desc: item.desc, pubDate: item.pubDate.toISOString(), source: item.source, cat: item.cat, region: item.region }; }
+  function catClass(cat) { return "cat-" + cat.replace(/[^A-Za-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
   function cardFor(item) {
     const card = el("div", "card");
     const top = el("div", "card-top");
@@ -152,11 +174,11 @@
     if (item.desc) card.appendChild(el("div", "card-desc", item.desc));
     const tags = el("div", "card-tags");
     tags.appendChild(el("span", "tag src", item.source));
-    tags.appendChild(el("span", "tag cat-" + item.cat.replace(/\s/g, "-"), item.cat));
+    tags.appendChild(el("span", "tag " + catClass(item.cat), item.cat));
     card.appendChild(tags);
     const noteBox = el("div", "note-box" + (hasNote ? " open" : ""));
     const textarea = document.createElement("textarea");
-    textarea.placeholder = "Your notes on this story…";
+    textarea.placeholder = item.cat === "Hiring" ? "Notes — e.g. application status, referral contact…" : "Your notes on this story…";
     textarea.value = notes[item.link] || "";
     let saveTimer = null;
     textarea.addEventListener("input", () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => { const v = textarea.value; if (v.trim()) { notes[item.link] = v; noteBtn.classList.add("has-note"); } else { delete notes[item.link]; noteBtn.classList.remove("has-note"); } saveJSON(LS_NOTES, notes); buildNav(); }, 400); });
@@ -176,17 +198,39 @@
     if (!us.length) { container.appendChild(el("div", "empty", "Nothing here yet.")); }
     else { us.slice(0, usShown).forEach(i => container.appendChild(cardFor(i))); if (us.length > usShown) { const btn = el("button", "more-btn", "Show more"); btn.addEventListener("click", () => { usShown += 40; render(); }); container.appendChild(btn); } }
   }
-  function currentTitle() { const n = NAV.find(n => n.key === activeKey); return n ? n.label.replace("★ ", "") : "All"; }
+  function currentTitle() { const n = NAV.find(n => n.key === activeKey); return n ? n.label.replace("★ ", "").replace("💼 ", "") : "All"; }
+  function renderHiring(container) {
+    container.appendChild(el("div", "hire-intro", "General remote-job boards barely cover roles like these, so instead of a scraped (and mostly empty) list, here are one-click live searches — always fresh, straight from the source."));
+    HIRING_ROLES.forEach(r => {
+      const card = el("div", "hire-card");
+      card.appendChild(el("div", "hire-role", r.role));
+      card.appendChild(el("div", "hire-note", r.note));
+      const links = el("div", "hire-links");
+      const li = el("a", "hire-link", "LinkedIn ↗");
+      li.href = r.linkedin; li.target = "_blank"; li.rel = "noopener noreferrer";
+      const wf = el("a", "hire-link", "Wellfound ↗");
+      wf.href = r.wellfound; wf.target = "_blank"; wf.rel = "noopener noreferrer";
+      links.appendChild(li); links.appendChild(wf);
+      card.appendChild(links);
+      container.appendChild(card);
+    });
+  }
   function render() {
     buildNav();
     document.getElementById("viewTitle").textContent = currentTitle();
     const content = document.getElementById("content");
     content.innerHTML = "";
+    if (activeKey === "Hiring") { renderHiring(content); return; }
     let list;
-    if (activeKey === "All") { list = ITEMS; }
+    if (activeKey === "All") { list = newsItems(); }
     else if (activeKey === "Saved") { const byLink = {}; Object.keys(savedItems).forEach(link => { byLink[link] = Object.assign({}, savedItems[link], { pubDate: new Date(savedItems[link].pubDate) }); }); ITEMS.forEach(i => { if (savedItems[i.link]) byLink[i.link] = i; }); list = Object.values(byLink); }
     else { list = ITEMS.filter(i => i.cat === activeKey); }
-    if (!list.length) { content.appendChild(el("div", "empty", activeKey === "Saved" ? "Nothing saved yet — click the ☆ on any story to save it for later." : "No stories in this category right now.")); return; }
+    if (!list.length) {
+      let msg = "No stories in this category right now.";
+      if (activeKey === "Saved") msg = "Nothing saved yet — click the ☆ on any story to save it for later.";
+      content.appendChild(el("div", "empty", msg));
+      return;
+    }
     renderList(list, content);
   }
   const LS_LEARN_DISMISSED = "digestLearnDismissedTerm";
